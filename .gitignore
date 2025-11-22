@@ -1,0 +1,17 @@
+# .gitignore
+
+# Python
+*.pyc
+__pycache__/
+.venv/
+venv/
+
+# Secrets
+.streamlit/secrets.toml
+
+# Data
+data/
+*.csv
+
+# OS
+.DS_Store
