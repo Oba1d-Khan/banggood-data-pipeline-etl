@@ -12,7 +12,9 @@ This project implements a Data Engineering pipeline to extract, process, and ana
 
 **Key Result:** Successfully scraped, cleaned, and loaded 500+ product records across 10 categories into a production-grade SQL Server database.
 
----
+I also developed an interactive **Streamlit** dashboard to allow real-time data exploration. This interface provides stakeholders with dynamic filtering capabilities for product categories, price ranges, and ratings.
+
+## ![Streamlit Dashboard](./images/streamlit%20img.png)
 
 ## 2. Architecture Diagram
 
@@ -122,11 +124,13 @@ _Ranks categories based on total inventory volume and popularity._
 ## 7. Conclusion & Recommendations
 
 ### Key Findings
+
 - **Budget Dominance:** The platform heavily favors budget shoppers, with the vast majority of inventory priced between **$15 and $25**.
 - **Viral Skew:** Customer engagement is highly concentrated; a small number of "viral" products capture most reviews, while the "long tail" of inventory remains unreviewed.
 - **Price ≠ Quality:** Data shows no strong correlation between higher prices and better ratings, suggesting **value-for-money** is the key driver of satisfaction.
 
 ### Recommendations
+
 - **Pricing Strategy:** Sellers should target the **$15-$20 sweet spot** for new product launches to maximize volume and visibility.
 - **Engagement Focus:** Aggressively incentivize the first 5 reviews for new listings, as unreviewed products struggle to gain organic traction.
 - **Opportunity:** Market **"Hidden Gems"** (5.0-rated budget items) to value-conscious buyers who may be overlooking high-quality, low-cost options.

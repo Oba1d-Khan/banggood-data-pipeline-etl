@@ -5,8 +5,8 @@ from data_loader import load_data_to_sql
 from utils.paths import get_data_path
 
 # constants
-RAW_DATA_PATH = get_data_path('banggood_raw_data.csv')
-PAGES_TO_SCRAPE = 2
+RAW_DATA_PATH = get_data_path('banggood_raw_data3.csv')
+PAGES_TO_SCRAPE = 4
 
 def run_pipeline():
     # 1. Extract

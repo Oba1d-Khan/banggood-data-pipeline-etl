@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🛍️ Banggood Product Analytics Dashboard")
+st.title("Banggood Product Analytics Dashboard")
 
 TABLE_NAME = 'banggood_products'
 CSV_PATH = Path("data") / "banggood_clean_data.csv"
@@ -77,7 +77,7 @@ if not df.empty:
     c1, c2 = st.columns(2)
     
     with c1:
-        st.subheader("📦 Stock Availability (Count per Category)")
+        st.subheader("🔰 Stock Availability (Count per Category)")
         # Analysis 5: Stock availability analysis
         stock_counts = df_filtered['category'].value_counts().reset_index()
         stock_counts.columns = ['Category', 'Count']
@@ -85,7 +85,7 @@ if not df.empty:
         st.plotly_chart(fig_stock, use_container_width=True)
 
     with c2:
-        st.subheader("💰 Price Distribution per Category")
+        st.subheader("🔰 Price Distribution per Category")
         # Analysis 1: Price distribution per category
         fig_box = px.box(df_filtered, x="category", y="price", color="category")
         st.plotly_chart(fig_box, use_container_width=True)
@@ -94,7 +94,7 @@ if not df.empty:
     c3, c4 = st.columns(2)
 
     with c3:
-        st.subheader("📈 Rating vs. Price Correlation")
+        st.subheader("🔰 Rating vs. Price Correlation")
         # Analysis 2: Rating vs Price correlation
         fig_scatter = px.scatter(
             df_filtered, x="price", y="rating", 
@@ -104,7 +104,7 @@ if not df.empty:
         st.plotly_chart(fig_scatter, use_container_width=True)
 
     with c4:
-        st.subheader("🔥 Top 10 Reviewed Products")
+        st.subheader("🔰 Top 10 Reviewed Products")
         # Analysis 3: Top reviewed products
         top_items = df_filtered.nlargest(10, 'reviews')
         fig_bar = px.bar(
@@ -116,7 +116,7 @@ if not df.empty:
         st.plotly_chart(fig_bar, use_container_width=True)
 
     # --- ROW 3: VALUE ANALYSIS ---
-    st.subheader("💎 Best Value Metric per Category")
+    st.subheader("🔰 Best Value Metric per Category")
     # Analysis 4: Best value metric (Rating / Price)
     
     # 1. Group by category

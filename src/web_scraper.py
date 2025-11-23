@@ -6,49 +6,92 @@ from bs4 import BeautifulSoup
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 
-CATEGORIES = [
-    "https://www.banggood.com/Wholesale-Tops-ca-15002.html",
-    "https://www.banggood.com/Wholesale-T-Shirts-ca-15003.html",
-    "https://www.banggood.com/Wholesale-Shirts-ca-15006.html",
-    "https://www.banggood.com/Wholesale-Hoodies-and-Sweatshirts-ca-15008.html",
-    "https://www.banggood.com/Wholesale-Outwear-ca-15014.html",
-    "https://www.banggood.com/Wholesale-Dresses-ca-16042.html",
-    "https://www.banggood.com/Wholesale-Two-Piece-Set-ca-16057.html",
-    "https://www.banggood.com/Wholesale-Womens-Accessories-ca-10018.html",
-    "https://www.banggood.com/Wholesale-Shoes-and-Bags-ca-11001.html",
-    "https://www.banggood.com/Wholesale-Jewelry-Watches-and-Accessories-ca-8001.html"
-]
-
 def get_driver():
-    """Sets up undetected_chromedriver to bypass Banggood security"""
+    """Sets up undetected_chromedriver"""
     options = uc.ChromeOptions()
     options.add_argument("--start-maximized")
     options.add_argument("--disable-popup-blocking")
-    
-    print("   ...Launching Browser...")
+    print("   ...Launching Stealth Browser...")
     driver = uc.Chrome(options=options)
     return driver
 
-def scrape_and_save(num_pages=2, output_csv='data/banggood_raw_data.csv'):
-    print("--- 1. STARTING BANGGOOD SCRAPER ---")
+def discover_categories(driver, limit=10):
+   
+    print("\n🔍 DISCOVERING CATEGORIES ...")
+    
+    start_url = "https://www.banggood.com/all-wholesale-products.html?from=nav"
+    
+    try:
+        driver.get(start_url)
+        time.sleep(5)
+        
+        soup = BeautifulSoup(driver.page_source, 'lxml')
+        all_links = soup.find_all('a', href=True)
+        
+        valid_categories = []
+
+        for link in all_links:
+            href = link['href']
+            
+            if "Wholesale-" in href and ".html" in href:
+                
+                if not href.startswith("http"):
+                    href = "https://www.banggood.com" + href.strip()
+                
+                if ("-c-" in href or "-ca-" in href) and href not in valid_categories:
+                    valid_categories.append(href)
+        
+        print(f"   Found {len(valid_categories)} total categories on the sitemap.")
+
+        if not valid_categories:
+            print("   ❌ Critical: No categories found. Check URL or Internet.")
+            return []
+
+        # Completely Random Selection
+        if len(valid_categories) > limit:
+            selected = random.sample(valid_categories, limit)
+        else:
+            selected = valid_categories
+            
+        return selected
+
+    except Exception as e:
+        print(f"   ❌ Discovery failed: {e}")
+        return []
+
+def scrape_and_save(num_pages=2, output_csv='data/banggood_raw_data3.csv'):
+    print("--- 1. STARTING DYNAMIC SCRAPER ---")
     
     driver = get_driver()
     all_products = []
 
     try:
-        for category_url in CATEGORIES:
+        # 1. Discover (Pure Random from Sitemap)
+        categories_to_scrape = discover_categories(driver, limit=10)
+        
+        if not categories_to_scrape:
+             print("❌ Exiting: No categories found.")
+             return
+
+        print(f"   Selected {len(categories_to_scrape)} random targets.")
+
+        # 2. Scrape Loop
+        for category_url in categories_to_scrape:
             try:
-                # Extract readable category name
-                # e.g. Wholesale-Tops-ca-15002 -> Tops
-                raw_name = category_url.split('.com/Wholesale-')[1].split('-ca-')[0]
+                # Extract name dynamically from URL
+                if '-ca-' in category_url:
+                    raw_name = category_url.split('Wholesale-')[1].split('-ca-')[0]
+                elif '-c-' in category_url:
+                    raw_name = category_url.split('Wholesale-')[1].split('-c-')[0]
+                else:
+                    raw_name = "Unknown"
                 category_name = raw_name.replace('-', ' ')
             except:
-                category_name = "Unknown Category"
+                category_name = "Category"
             
             print(f"\n📂 Scraping: {category_name}")
             
             for page in range(1, num_pages + 1):
-                # Handle pagination safely
                 separator = "&" if "?" in category_url else "?"
                 target_url = f"{category_url}{separator}page={page}"
                 
@@ -56,63 +99,50 @@ def scrape_and_save(num_pages=2, output_csv='data/banggood_raw_data.csv'):
                 
                 try:
                     driver.get(target_url)
+                    time.sleep(random.uniform(3, 6))
                     
-                    # Randomized wait (Human behavior)
-                    time.sleep(random.uniform(5, 8))
-                    
-                    # Scroll to trigger images
-                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 3);")
-                    time.sleep(1)
-                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 1.5);")
+                    # Scroll to trigger lazy loading
+                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 2);")
                     time.sleep(1)
                     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                     time.sleep(2)
 
-                    # Parse
                     soup = BeautifulSoup(driver.page_source, 'lxml')
-                    
-                    # Selectors
                     product_cards = soup.find_all('div', class_='p-wrap')
                     
                     if not product_cards:
-                        print(" ⚠️ No items found (Check browser).")
+                        print(" ⚠️ No items.")
                         continue
 
                     count_new = 0
                     for card in product_cards:
                         item = {}
                         try:
-                            # Title
                             title_tag = card.find('a', class_='title')
                             item['name'] = title_tag.text.strip() if title_tag else None
                             
-                            # Price
                             price_tag = card.find('span', class_='price')
                             item['price'] = price_tag.text.strip() if price_tag else None
                             
-                            # URL
                             item['url'] = title_tag['href'] if title_tag else None
                             
-                            # Rating
-                            rating_tag = card.find('span', class_='review-text')
-                            item['rating'] = rating_tag.text.strip() if rating_tag else "0"
-                                
-                            # Reviews
-                            review_tag = card.find('a', class_='review')
-                            item['reviews'] = review_tag.text.strip() if review_tag else "0 reviews"
+                            try: item['rating'] = card.find('span', class_='review-text').text.strip()
+                            except: item['rating'] = "0"
+                            
+                            try: item['reviews'] = card.find('a', class_='review').text.strip()
+                            except: item['reviews'] = "0 reviews"
 
                             item['category'] = category_name
                             
                             if item['name'] and item['price']:
                                 all_products.append(item)
                                 count_new += 1
-                            
-                        except Exception:
+                        except:
                             continue 
                     print(f" -> Found {count_new} items")
                     
                 except Exception as e:
-                    print(f" -> Error loading page: {e}")
+                    print(f" -> Error: {e}")
 
     except Exception as e:
         print(f"❌ Critical Error: {e}")
@@ -120,6 +150,7 @@ def scrape_and_save(num_pages=2, output_csv='data/banggood_raw_data.csv'):
         print("🔌 Closing browser...")
         driver.quit()
 
+    # Save Results
     if all_products:
         try:
             keys = ['name', 'price', 'rating', 'reviews', 'category', 'url']
